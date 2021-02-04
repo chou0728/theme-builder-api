@@ -1,25 +1,55 @@
 const themeModel = require('../models/themeModel');
+const componentModel = require('../models/componentModel');
+const templateModal = require('../models/templateModal');
+const colorModal = require('../models/colorModal');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
+const deepClone = require('../utils/deepClone');
 
 const themeController = {
-  getAll: (req, res) => {
-    themeModel.getAll((err, results) => {
-      if (err) return console.log(err);
+  getAll: catchAsync(async (req, res, next) => {
+    try {
+      let themes = await themeModel.getAll();
+      let templates = await templateModal.getAll();
+      for (let theme of themes) {
+        const { themeId } = theme;
+        theme.templates = deepClone(templates);
+        let { colorId } = await colorModal.getEnabledColor({ themeId });
+        let colors = await colorModal.getColorsByThemeId({ themeId });
+        for (let template of theme.templates) {
+          const { templateId } = template;
+          let { componentId } = await componentModel.getEnabledComponent({
+            themeId,
+            templateId
+          });
+          template.enabledComponent = componentId;
+          template.enabledColor = colorId;
+          template.colors = colors;
+        }
+      }
       res.status(200).json({
         status: 'success',
-        data: results
+        data: themes
       });
-    });
-  },
-  get: (req, res) => {
-    const id = req.params.id;
-    themeModel.get(id, (err, results) => {
-      if (err) return console.log(err);
+    } catch (err) {
+      console.log(err);
+      next(new AppError(err, 500));
+    }
+  }),
+  get: catchAsync(async (req, res, next) => {
+    const themeId = parseInt(req.params.themeId);
+    const payload = { themeId };
+    try {
+      const theme = await themeModel.get(payload);
       res.status(200).json({
         status: 'success',
-        data: results[0] // 因為就算只有一個結果 results 一樣會是一個陣列，所以要用 [0] 來取值
+        data: theme
       });
-    });
-  }
+    } catch (err) {
+      console.log(err);
+      next(new AppError(err, 500));
+    }
+  })
 };
 
 module.exports = themeController;

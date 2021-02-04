@@ -5,19 +5,18 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const database = require('./database');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const themeRoutes = require('./routes/themeRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 // Start express app
 const app = express();
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  database.connect();
-  console.log(`App is listening at http://localhost:${port}`);
+  console.log(`listening at http://localhost:${port}`);
 });
 
 // GLOBAL MIDDLEWARES
@@ -54,6 +53,7 @@ app.use(hpp());
 // ROUTES
 
 app.use('/api/v1/themes', themeRoutes);
+app.use('/api/v1/user', userRoutes);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
