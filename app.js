@@ -14,13 +14,7 @@ const userRoutes = require('./routes/userRoutes');
 // Start express app
 const app = express();
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`listening at http://localhost:${port}`);
-});
-
 // GLOBAL MIDDLEWARES
-
 // Implement CORS
 app.use(cors());
 // Access-Control-Allow-Origin *
@@ -47,7 +41,8 @@ app.use('/api', limiter);
 app.use(xss());
 
 // Prevent parameter pollution
-app.use(bodyParser.urlencoded({ extended: true })); // Make sure the body is parsed beforehand.
+app.use(bodyParser.urlencoded({ extended: false })); // Make sure the body is parsed beforehand.
+app.use(bodyParser.json());
 app.use(hpp());
 
 // ROUTES
